@@ -12,7 +12,7 @@
 **************************************************
 <b>(1) Description</b>
 **************************************************
-Made by Matthew Breden
+Made by Matthew Breden<br>
 A very simple to use high level thread-per-connection socket networking framework using JSON for Java.
 Using the JSON Library by stleary here: https://github.com/stleary/JSON-java
 
