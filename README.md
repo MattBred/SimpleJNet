@@ -14,7 +14,7 @@
 **************************************************
 Made by Matthew Breden<br>
 A very simple to use high level thread-per-connection socket networking framework using JSON for Java.<br>
-Using the JSON Library by stleary here: https://github.com/stleary/JSON-java<br>
+Using the JSON-Simple found here https://code.google.com/archive/p/json-simple/
 <br>
 SimpleJNet is for projects that require a simple, quick to set up, and reliable networking framework.<br>
 <br>
