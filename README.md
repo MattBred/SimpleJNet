@@ -106,7 +106,7 @@ Done! The client will now receive the message.
 
 When the server wrapper receives a message, the onMessageReceived() function will call. The two parameters will include the client that sent the message, and the message itself. To println a message that has a key of "Title", do the following
   
-	System.out.println("The title is " + message.getString("Title"));
+	System.out.println("The title is " + message.get("Title"));
   
 And that's it!
 <br>
