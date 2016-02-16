@@ -6,7 +6,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 public class SimpleJNetBaseClient extends Thread{
 	private static final String TAG = "SimpleJNetBaseClient";
@@ -30,7 +31,7 @@ public class SimpleJNetBaseClient extends Thread{
 		try {
 			while (socket.isConnected() && !socket.isClosed() && in != null) {
 				in = reader.readLine();
-				JSONObject message = new JSONObject(in);
+				JSONObject message = (JSONObject)JSONValue.parse(in);
 				((SimpleJNetServerWrapper)baseServer.getWrapper()).onMessageReceived((SimpleJNetClient)this,message);
 			}
 		} catch (Exception e) {

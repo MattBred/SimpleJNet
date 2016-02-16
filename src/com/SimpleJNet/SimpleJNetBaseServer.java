@@ -21,7 +21,8 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 public class SimpleJNetBaseServer {
 	/*
@@ -266,7 +267,7 @@ public class SimpleJNetBaseServer {
 	    		if (baseServer.isConnected()) {
 	    			try {
 	    				rawText = baseServer.reader.readLine();
-	    				JSONObject message = new JSONObject(rawText);
+	    				JSONObject message = (JSONObject)JSONValue.parse(rawText);
 	    				((SimpleJNetClientWrapper) wrapper).onMessageReceived(message);
 	    		    } catch (IOException e) {
 	    		    	disconnect();

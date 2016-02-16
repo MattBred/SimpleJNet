@@ -1,7 +1,7 @@
 package com.SimpleJNet;
 import java.io.InputStream;
 
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
 
 public class SimpleJNetClientWrapper implements SimpleJNetBaseWrapper {
 	/*
