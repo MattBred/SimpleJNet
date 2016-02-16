@@ -13,17 +13,17 @@
 <b>(1) Description</b>
 **************************************************
 Made by Matthew Breden<br>
-A very simple to use high level thread-per-connection socket networking framework using JSON for Java.
-Using the JSON Library by stleary here: https://github.com/stleary/JSON-java
-
-SimpleJNet is for projects that require a simple, quick to set up, and reliable networking framework.
-
-Key Features:
-  -Uses a JSON library as the method for writing and reading information
-  -TCP Socket based protocol
-  -Supports SSL Encryption
-  -UTF-8 Character Set
-  -(Not really a feature..) Thread-per-connection based setup will not work for large scale setups. However, could be modified to use NIO.
+A very simple to use high level thread-per-connection socket networking framework using JSON for Java.<br>
+Using the JSON Library by stleary here: https://github.com/stleary/JSON-java<br>
+<br>
+SimpleJNet is for projects that require a simple, quick to set up, and reliable networking framework.<br>
+<br>
+Key Features:<br>
+  -Uses a JSON library as the method for writing and reading information<br>
+  -TCP Socket based protocol<br>
+  -Supports SSL Encryption<br>
+  -UTF-8 Character Set<br>
+  -(Not really a feature..) Thread-per-connection based setup will not work for large scale setups. However, could be modified to use NIO.<br>
 <br>
 <br>
 <br>
