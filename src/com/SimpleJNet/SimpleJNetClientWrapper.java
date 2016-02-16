@@ -17,7 +17,7 @@ public class SimpleJNetClientWrapper implements SimpleJNetBaseWrapper {
 	private SimpleJNetBaseServer baseServer;
 
 	public SimpleJNetClientWrapper() {
-		baseServer = new SimpleJNetBaseServer(false,this);
+		baseServer = new SimpleJNetBaseServer(this);
 	}
 
 	public void error(String errorString) {
