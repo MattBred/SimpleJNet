@@ -1,7 +1,7 @@
 package com.SimpleJNet;
 import java.io.InputStream;
 
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
 
 public class SimpleJNetClientWrapper implements SimpleJNetBaseWrapper {
 	/*
@@ -17,7 +17,7 @@ public class SimpleJNetClientWrapper implements SimpleJNetBaseWrapper {
 	private SimpleJNetBaseServer baseServer;
 
 	public SimpleJNetClientWrapper() {
-		baseServer = new SimpleJNetBaseServer(false,this);
+		baseServer = new SimpleJNetBaseServer(this);
 	}
 
 	public void error(String errorString) {

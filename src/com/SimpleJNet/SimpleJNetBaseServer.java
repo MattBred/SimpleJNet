@@ -21,19 +21,22 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.json.JSONObject;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 
 public class SimpleJNetBaseServer {
 	/*
+	 * 
 	 * Non user-interactable base class for the client/server connection.
 	 * Doesn't use it's own thread outright, but each connection does.
+	 * 
 	 */
 	private static final String TAG = "SimpleJNetBaseServer";
 	private int port = -1;
 	private String serverAddress;
 	private boolean useSSL = false;
 	private boolean requireClientAuth = false;
-	private boolean serverConnected = false;
+	private boolean connected = false;
 	private boolean isProgramServer = false;
 	
 	private BufferedReader reader;
@@ -50,10 +53,19 @@ public class SimpleJNetBaseServer {
 	private SSLSocketFactory sslSocketFactory;
 	private Socket socket;
 	private SSLSocket sslSocket;
+	private Object threadPause = new Object();
 	
-	public SimpleJNetBaseServer(boolean isProgramServer, SimpleJNetBaseWrapper topServer) {
-		this.isProgramServer = isProgramServer;
-		this.wrapper = topServer;
+	
+	
+	/*
+	 * 
+	 * Called from the wrapper. Starts everything off, and tells it if it's a server or client based wrapper
+	 * 
+	 */
+	public SimpleJNetBaseServer(SimpleJNetBaseWrapper wrapper) {
+		System.out.println("base server");
+		this.isProgramServer = wrapper instanceof SimpleJNetServerWrapper;
+		this.wrapper = wrapper;
 		if (isProgramServer) {
 			ClientListener listener = new ClientListener(this);
 			listener.start();
@@ -63,10 +75,27 @@ public class SimpleJNetBaseServer {
 		}
 	}
 	
+	
+	
+	/*
+	 * 
+	 * In client program, returns true if client is connected to the server.
+	 * In server program, returns true if server socket is connected.
+	 * 
+	 */
 	public boolean isConnected() {
-		return serverConnected;
+		return connected;
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Sets up all the sockets.
+	 * In client program, connects to server.
+	 * In server program, creates server socket.
+	 * 
+	 */
 	public void connect() {
 		if (isProgramServer) {
 			//Running program as a server
@@ -89,6 +118,7 @@ public class SimpleJNetBaseServer {
 				wrapper.error("Server Already Running");
 			}
 		} else {
+			//Running program as a client
 			if (!isConnected()) {
 				try {
 					if (useSSL) {
@@ -113,11 +143,29 @@ public class SimpleJNetBaseServer {
 		} 
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Called when the socket connection is successful, and calls the wrapper's onConnected() function.
+	 * 
+	 */
 	private void onConnected() {
-		serverConnected = true;
+		connected = true;
+		synchronized(threadPause) {
+			threadPause.notifyAll();
+		}
 		wrapper.onConnected();
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Closes the connection. The object can still reconnect at any time.
+	 * This must be called first if the server is running and you want to make changes to the settings (port, address, SSL settings etc)
+	 * 
+	 */
 	public void disconnect() {
 		try {
 			if (isConnected()) {
@@ -131,6 +179,14 @@ public class SimpleJNetBaseServer {
 		} catch (Exception e) {getWrapper().error("Disconnection Failed");}
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Called once per connect()
+	 * In client program, this creates the socket (SSL type) to the server
+	 * 
+	 */
 	private void createSocketSSL() throws Exception {
 		SSLContext sslContext = SSLContext.getInstance("TLS");
 		KeyManager[] keyManagers = null;
@@ -143,11 +199,27 @@ public class SimpleJNetBaseServer {
 		sslSocket.connect(new InetSocketAddress(serverAddress,port),2000);
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Called once per connect()
+	 * In client program, this creates the socket to the server
+	 * 
+	 */
 	private void createSocket() throws IOException {
 		socket = new Socket();
 		socket.connect(new InetSocketAddress(serverAddress, port), 2000);
 	}
 
+	
+	
+	/*
+	 * 
+	 * Called once per connect()
+	 * In server program, this creates the socket (SSL type) to receive incoming connections
+	 * 
+	 */	
 	private void createServerSocketSSL() throws Exception {
 		SSLContext sslContext = SSLContext.getInstance("TLS");
 		KeyManager[] keyManagers = null;
@@ -160,26 +232,56 @@ public class SimpleJNetBaseServer {
 		serverSocketSSL.setNeedClientAuth(requireClientAuth);
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Called once per connect()
+	 * In server program, this creates the socket to receive incoming connections
+	 * 
+	 */
 	private void createServerSocket() throws IOException {
 		serverSocket = new ServerSocket(port);
 	}
 
+	
+	
+	/*
+	 * 
+	 * Called by SimpleJNetClientWrapper
+	 * In client program, this sends a message to the server
+	 * 
+	 */
 	public void sendMessage(JSONObject message) {
-		//When using this in a client program, this method sends messages to the server.
 		if (isConnected()) {
 			writer.println(message.toString());
 		} else {wrapper.error("Message Send Failure - Connection Closed");}
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Called by SimpleJNetClientWrapper
+	 * In client program, this sets the server address
+	 * 
+	 */
 	public void setServerAddress(String address) {
-		//When using this in a client program, this method sets the server's address
 		if (!isConnected()) {
 			this.serverAddress = address;
 		} else {
 			wrapper.error("Can't change address while still connected.");
 		}
 	}
-		
+	
+	
+	
+	/*
+	 * 
+	 * Called by SimpleJNetClientWrapper
+	 * Sets port for server
+	 * 
+	 */
 	public void setPort(int port) {
 		//Sets the port for the server to use - Only works before server start
 		if (!isConnected()) {
@@ -189,6 +291,14 @@ public class SimpleJNetBaseServer {
 		}
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Called by SimpleJNetClientWrapper
+	 * Set to true if you want to use SSL
+	 * 
+	 */
 	public void setUseSSL(boolean useSSL) {
 		//Sets variable to use SSL encryption or not - Only works before server start
 		if (!isConnected()) {
@@ -198,6 +308,14 @@ public class SimpleJNetBaseServer {
 		}
 	}
 	
+	
+	
+	/*
+	 * 
+	 * Called by SimpleJNetClientWrapper
+	 * Set to true if you want to require SSL client authorization
+	 * 
+	 */
 	public void setRequireSSLClientAuth(boolean requireClientAuth) {
 		if (!isConnected()) {
 			this.requireClientAuth = requireClientAuth;
@@ -206,8 +324,15 @@ public class SimpleJNetBaseServer {
 		}
 	}
 
+	
+	
+	/*
+	 * 
+	 * Called by SimpleJNetClientWrapper
+	 * Sets the SSL's trust store inputstream and password.
+	 * 
+	 */
 	public void setTrustStore(InputStream inputStream, String trustStorePassword) {
-		//Sets the SSL trust store details - Only works before server start
 		if (!isConnected()) {
 			try {
 				KeyStore ts = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -222,8 +347,15 @@ public class SimpleJNetBaseServer {
 		}
 	}
 
+	
+	
+	/*
+	 * 
+	 * Called by SimpleJNetClientWrapper
+	 * Sets the SSL's key store inputstream and password.
+	 * 
+	 */
 	public void setKeyStore(InputStream inputStream, String keyStorePassword) {
-		//Sets the SSL key store details
 		if (!isConnected()) {
 			try {
 				KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
@@ -238,20 +370,50 @@ public class SimpleJNetBaseServer {
 		}
 	}
 
+	
+	
+	/*
+	 * 
+	 * Called by connect() and disconnect()
+	 * In client program, this is called to get the client's socket.
+	 * 
+	 */
 	private Socket getSocket() {
 		if (useSSL) return sslSocket;
 		else return socket;
 	}
 	
+	
+	/*
+	 * 
+	 * Called by disconnect() and ClientListener.run()
+	 * In server program, this is called to get the server's socket.
+	 * 
+	 */
 	private ServerSocket getServerSocket() {
 		if (useSSL) return serverSocketSSL;
 		else return serverSocket;
 	}	
 	
+	
+	
+	/*
+	 * 
+	 * Called by disconnect(), SimpleJNetBaseClient.disconnect(), and SimpleJNetBaseClient.run()
+	 * Returns the wrapper.
+	 * 
+	 */
 	public SimpleJNetBaseWrapper getWrapper() {
 		return wrapper;
 	}
 	
+	
+	
+	/*
+	 * 
+	 * In client program, this is a permanent thread class that receives messages from the server it's connected to.
+	 * 
+	 */
 	private class ServerMessageListener extends Thread{
 		private SimpleJNetBaseServer baseServer;
 		
@@ -260,32 +422,39 @@ public class SimpleJNetBaseServer {
 		}
 		
 		public void run() {
-			//Running program as a client
 			String rawText = "";
 	    	while(true){
 	    		if (baseServer.isConnected()) {
 	    			try {
 	    				rawText = baseServer.reader.readLine();
-	    				JSONObject message = new JSONObject(rawText);
+	    				JSONObject message = (JSONObject)JSONValue.parse(rawText);
 	    				((SimpleJNetClientWrapper) wrapper).onMessageReceived(message);
 	    		    } catch (IOException e) {
-	    		    	disconnect();
+	    		    	closeConnection();
 	    		    } catch (Exception e) {
 	    		    	e.printStackTrace();
-	    		    	disconnect();
+	    		    	closeConnection();
 	    		    }
 	    		} else {
-	    			try {Thread.sleep(100);} catch (Exception e) {}
+	    			synchronized(threadPause) {
+	    				try {threadPause.wait();} catch (InterruptedException e) {e.printStackTrace();}
+	    			}
 	    		}
 	    	}
 		}
-		
-		private void disconnect() {
-			baseServer.serverConnected = false;
+		private void closeConnection() {
+			baseServer.connected = false;
 			baseServer.wrapper.onConnectionClosed();
 		}
 	}
 	
+	
+	
+	/*
+	 * 
+	 * In a server program, this is a permanent thread class that receives incoming client connections and creates SimpleJNetClient objects when they arrive
+	 * 
+	 */
 	private class ClientListener extends Thread{
 		private static final String TAG = "SimpleNetClientListener";
 		private Socket clientSocket;
@@ -293,30 +462,41 @@ public class SimpleJNetBaseServer {
 
 		private ClientListener(SimpleJNetBaseServer server) {
 			this.baseServer = server;
+			System.out.println("clientlistener");
 		}
 		
 		public void run() {
+			System.out.println("run");
 			while (true) {
+				System.out.println("Beginning of loop");
+				//TODO DEBUG!!!
 				if (baseServer.isConnected()) {
 					try {
+						System.out.println("Listening for clients");
+						//TODO DEBUG!!!
 						clientSocket = baseServer.getServerSocket().accept();
 						SimpleJNetClient client = new SimpleJNetClient();
 						client.init(clientSocket, baseServer);
 						((SimpleJNetServerWrapper) wrapper).onNewConnection(client);
 					}
 					catch (IOException e) {
-						disconnect();
+						closeConnection();
 					} catch (Exception e) {
 						e.printStackTrace();
-						disconnect();
+						closeConnection();
+					}
+				} else {
+					System.out.println("Not connected!");
+					//TODO DEBUG!!!
+					synchronized(threadPause) {
+						try {threadPause.wait();} catch (InterruptedException e) {e.printStackTrace();}
 					}
 				}
-				try {Thread.sleep(100);} catch (Exception e) {};
 			}
 		}
 		
-		private void disconnect() {
-			baseServer.serverConnected = false;
+		private void closeConnection() {
+			baseServer.connected = false;
 			baseServer.wrapper.onConnectionClosed();
 		}
 	}
