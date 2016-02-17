@@ -1,4 +1,4 @@
-package com.SimpleJNet;
+
 import java.io.InputStream;
 
 public interface SimpleJNetBaseWrapper {

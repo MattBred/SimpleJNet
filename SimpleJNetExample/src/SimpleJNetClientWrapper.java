@@ -1,4 +1,4 @@
-package com.SimpleJNet;
+
 import java.io.InputStream;
 
 import org.json.simple.JSONObject;
@@ -28,30 +28,37 @@ public class SimpleJNetClientWrapper implements SimpleJNetBaseWrapper {
 	public void onConnected() {
 		//This method is called when the server is successfully connected
 		System.out.println(TAG + " - onConnected() - Wrapper Connected");
+		SimpleJNet_Example.setClientConnectionChanged();
 	}
 
 	public void onConnectionClosed() {
 		//When the connection to the server is closed (it has to be connected first to call this)
 		System.out.println(TAG + " - onConnectionClosed() - Connection to Server closed");
+		SimpleJNet_Example.setClientConnectionChanged();
 	}
 	
 	public void onConnectionFailed(String reason) {
 		//After connect() is called, if the wrapper fails to connect to the server, it calls this
 		System.out.println(TAG + " - onConnectionFailed() - Failed to Connect to Server, Reason: " + reason);
+		if (!isConnected()) SimpleJNet_Example.setClientStatus("Connection Failed");
+		else SimpleJNet_Example.setClientStatus("Connected");
 	}
 	
 	public void onMessageReceived(JSONObject message) {
 		//This method returns messages from the server.
 		System.out.println(TAG + " - onMessageReceived() - toString: " + message.toString());
+		SimpleJNet_Example.setClientMessageReceived((String)message.get("Title"));
 	}
 
 	public void connect() {
 		System.out.println(TAG + " - connect() - Wrapper Attempting To Connect to Server");
+		SimpleJNet_Example.setClientStatus("Connecting");
 		baseServer.connect();
 	}
 	
 	public void disconnect() {
 		System.out.println(TAG + " disconnect() - Wrapper Disconnecting");
+		SimpleJNet_Example.setClientStatus("Disconnecting");
 		baseServer.disconnect();
 	}
 	
