@@ -147,8 +147,14 @@ public class SimpleJNet_Example {
 		}
 	}
 	private void clientConnectButton() {
-		if (!clientWrapper.isConnected()) clientWrapper.connect();
-		else clientWrapper.disconnect();
+		//Create a new thread here so the connect() doesn't hang. Ideally would use a dedicated thread for all network commands.
+		new Thread(new Runnable() {
+			public void run() {
+				if (!clientWrapper.isConnected()) clientWrapper.connect();
+				else clientWrapper.disconnect();
+			}
+		}).start();
+
 	}
 	
 	private void clientSendMessageButton() {
