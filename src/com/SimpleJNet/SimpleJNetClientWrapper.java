@@ -77,14 +77,10 @@ public class SimpleJNetClientWrapper implements SimpleJNetBaseWrapper {
 	}
 
 	public void setUseSSL(boolean useSSL) {
-		//Use SSL? And require client Auth?
+		//Use SSL?
 		baseServer.setUseSSL(useSSL);
 	}
 	
-	public void setRequireSSLClientAuth(boolean requireClientAuth) {
-		baseServer.setRequireSSLClientAuth(requireClientAuth);
-	}
-
 	public void setKeyStore(InputStream keyStorePath, String keyStorePassword) {
 		//Set key store details for SSL
 		baseServer.setKeyStore(keyStorePath, keyStorePassword);

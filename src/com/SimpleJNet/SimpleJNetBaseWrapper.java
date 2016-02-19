@@ -11,7 +11,6 @@ public interface SimpleJNetBaseWrapper {
 	void disconnect();
 	void setPort(int port);
 	void setUseSSL(boolean useSSL);
-	void setRequireSSLClientAuth(boolean requireClientAuth);
 	void setKeyStore(InputStream keyStorePath, String keyStorePassword);
 	void setTrustStore(InputStream trustStorePath, String trustStorePassword);
 }
